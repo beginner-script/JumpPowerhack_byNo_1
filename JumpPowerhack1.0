@@ -1,0 +1,136 @@
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local UIS = game:GetService("UserInputService")
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function makeDraggable(frame)
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                       startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.Position = UDim2.new(0, 0, 0, 0)
+background.BackgroundColor3 = Color3.new(0, 0, 0)
+background.Parent = gui
+
+local container = Instance.new("Frame")
+container.Size = UDim2.new(0, 400, 0, 200)
+container.Position = UDim2.new(0.5, -200, 0.5, -100)
+container.BackgroundTransparency = 1
+container.Parent = gui
+
+local madeByText = Instance.new("TextLabel")
+madeByText.Size = UDim2.new(1, 0, 0, 60)
+madeByText.Position = UDim2.new(0, 0, 0, 20)
+madeByText.BackgroundTransparency = 1
+madeByText.TextColor3 = Color3.new(1, 1, 1)
+madeByText.Font = Enum.Font.SourceSansBold
+madeByText.TextSize = 40
+madeByText.Text = "made by No_1"
+madeByText.TextWrapped = true
+madeByText.Parent = container
+
+local discordText = Instance.new("TextLabel")
+discordText.Size = UDim2.new(1, 0, 0, 40)
+discordText.Position = UDim2.new(0, 0, 0, 120)
+discordText.BackgroundTransparency = 1
+discordText.TextColor3 = Color3.new(1, 1, 1)
+discordText.Font = Enum.Font.SourceSansSemibold
+discordText.TextSize = 30
+discordText.Text = "디스코드 서버 (클릭 복사)"
+discordText.TextWrapped = true
+discordText.TextXAlignment = Enum.TextXAlignment.Center
+discordText.Parent = container
+discordText.Active = true
+discordText.Selectable = true
+
+local discordLink = "https://discord.gg/8K5GWzNr"
+
+discordText.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if setclipboard then
+            setclipboard(discordLink)
+            print("디스코드 링크가 클립보드에 복사되었습니다!")
+        else
+            print("복사 기능이 지원되지 않는 환경입니다.")
+        end
+    end
+end)
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 30)
+closeButton.Position = UDim2.new(1, -60, 0, 10)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.TextSize = 24
+closeButton.Text = "X"
+closeButton.Parent = container
+
+closeButton.MouseButton1Click:Connect(function()
+    gui.Enabled = false
+end)
+
+local textBox = Instance.new("TextBox")
+textBox.BackgroundColor3 = Color3.new(0, 0, 0) 
+textBox.TextColor3 = Color3.new(1, 1, 1)             
+textBox.TextSize = 20
+textBox.Font = Enum.Font.SourceSans
+textBox.Size = UDim2.new(0, 200, 0, 50)
+textBox.Position = UDim2.new(0.5, -100, 0.5, -25)
+textBox.PlaceholderText = "jumppower"
+textBox.Text = ""
+textBox.Parent = gui
+makeDraggable(textBox)
+textBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local value = tonumber(textBox.Text)
+        if value then
+            humanoid.JumpPower = value
+            print("성공: ", value)
+        else
+            warn("실패했노")
+        end
+    end
+end)
+
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.K then
+        gui.Enabled = not gui.Enabled
+    end
+end)
